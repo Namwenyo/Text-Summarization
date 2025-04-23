@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Summarization</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+  <header>
+    <div class="navbar">Text Summarization</div>
+  </header>
+
+  <main>
+    <h1 class="title">Welcome to free text summarizer</h1>
+    <div class="main-container">
+      
+      <!-- Recents Sidebar -->
+      <aside class="recents-sidebar">
+        <h2>Recents</h2>
+        <ul class="recents-list">
+          <li>No recents yet</li>
+        </ul>
+      </aside>
+
+      <!-- Input Section -->
+      <section class="input-section">
+        <div class="format-section">
+          <span class="format-label">format:</span>
+          <button type="button" class="format-option selected" data-format="paragraph">Paragraph</button>
+          <button type="button" class="format-option" data-format="bullets">Bullets</button>
+          <button type="button" class="format-option" data-format="numbered">Numbered</button>
+        </div>
+
+        <div class="input-box large-textarea" id="input-container">
+          <div id="initial-state">
+            <div class="paste-visuals" id="paste-btn" style="cursor: pointer;">
+              <img src="https://img.icons8.com/ios/50/copy.png" alt="paste icon"/>
+              <p>paste text</p>
+            </div>
+            
+            <div class="input-box upload-box" id="upload-box">
+              <input type="file" id="file-upload" style="display: none" accept=".txt,.pdf,.doc,.docx" hidden>
+              <p id="upload-label">drag/click to upload file</p>
+            </div>
+          </div>
+          <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+        </div>
+        <div id="input-word-count" style="text-align:right; font-size: 12px; color: red; margin-top: 5px;">
+          Word count: 0
+        </div>
+        
+
+        <button class="summarize-btn" id="summarize-btn">summarize</button>
+      </section>
+
+      <section class="output-section">
+        <div id="summary-output" style="white-space: pre-wrap; padding: 10px; flex-grow: 1;"></div>
+      
+        <div class="output-box">
+          <div class="word-count" id="word-count">word count: 0</div>
+          <div class="output-icon" id="copy-output" style="cursor:pointer;">
+            <img src="https://img.icons8.com/ios/24/copy.png" alt="output icon"/>
+            output
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+const textarea = document.getElementById("text-input");
+const initialState = document.getElementById("initial-state");
+const fileUpload = document.getElementById("file-upload");
+const uploadLabel = document.getElementById("upload-label");
+const uploadBox = document.getElementById("upload-box");
+const pasteBtn = document.getElementById("paste-btn");
+const inputWordCount = document.getElementById("input-word-count");
+const summarizeBtn = document.getElementById("summarize-btn");
+const formatButtons = document.querySelectorAll(".format-option");
+const summaryOutput = document.getElementById("summary-output");
+const wordCount = document.getElementById("word-count");
+const copyOutput = document.getElementById("copy-output");
+
+let selectedFormat = "paragraph";
+
+function showTextOnly() {
+  initialState.style.display = "none";
+  textarea.style.display = "block";
+  textarea.focus();
+}
+
+function updateInputWordCount() {
+  const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
+  inputWordCount.textContent = `Word count: ${words.length}`;
+}
+
+textarea.addEventListener("input", () => {
+  if (textarea.value.trim()) {
+    showTextOnly();
+  } else {
+    initialState.style.display = "flex";
+  }
+  updateInputWordCount();
+});
+
+uploadLabel.addEventListener("click", () => fileUpload.click());
+
+fileUpload.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        textarea.value = data.text;
+        showTextOnly();
+        updateInputWordCount();
+      }
+    })
+    .catch(() => alert("Failed to upload file."));
+});
+
+pasteBtn.addEventListener("click", async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      textarea.value = text;
+      showTextOnly();
+      updateInputWordCount();
+    } else {
+      alert("Clipboard is empty!");
+    }
+  } catch (err) {
+    alert("Clipboard access not allowed. Please allow permissions.");
+  }
+});
+
+formatButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    formatButtons.forEach(btn => btn.classList.remove("selected"));
+    button.classList.add("selected");
+    selectedFormat = button.dataset.format;
+  });
+});
+
+summarizeBtn.addEventListener("click", async () => {
+  const text = textarea.value.trim();
+  if (!text) return alert("Please enter or paste some text first.");
+
+  try {
+    const res = await fetch("/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, format: selectedFormat })
+    });
+
+    const data = await res.json();
+    summaryOutput.innerHTML = formatSummary(data.summary, selectedFormat);
+    wordCount.textContent = `word count: ${data.summary.split(/\s+/).filter(w => w.length > 0).length}`;
+  } catch (err) {
+    alert("Something went wrong with summarization.");
+    console.error(err);
+  }
+});
+
+function formatSummary(summary, format) {
+  const lines = summary.split("\n").filter(line => line.trim());
+  if (format === "bullets") {
+    return lines.map(line => `• ${line}`).join("\n");
+  } else if (format === "numbered") {
+    return lines.map((line, idx) => `${idx + 1}. ${line}`).join("\n");
+  }
+  return summary;
+}
+
+copyOutput.addEventListener("click", () => {
+  navigator.clipboard.writeText(summaryOutput.textContent)
+    .then(() => alert("Copied to clipboard!"))
+    .catch(() => alert("Failed to copy"));
+});
+
+// Drag-and-drop support
+uploadBox.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  uploadBox.classList.add("dragover");
+});
+
+uploadBox.addEventListener("dragleave", () => {
+  uploadBox.classList.remove("dragover");
+});
+
+uploadBox.addEventListener("drop", (e) => {
+  e.preventDefault();
+  uploadBox.classList.remove("dragover");
+
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        textarea.value = data.text;
+        showTextOnly();
+        updateInputWordCount();
+      }
+    })
+    .catch(() => alert("Failed to upload file."));
+});
+  </script>
+  
+</body>
+</html>

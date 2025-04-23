@@ -1,0 +1,134 @@
+body {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  color: red;
+}
+
+.navbar {
+  background-color: #5a64b0;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.title {
+  text-align: center;
+  background-color: #eee;
+  margin: 20px auto;
+  display: inline-block;
+  padding: 10px;
+  font-size: 24px;
+  border: 1px solid red;
+}
+
+.main-container {
+  display: flex;
+  padding: 10px 30px;
+}
+
+.recents-sidebar {
+  width: 150px;
+  margin-right: 10px;
+  color: red;
+}
+
+.input-section, .output-section {
+  flex: 1;
+  border: 2px solid #5a64b0;
+  margin: 0 10px;
+  padding: 10px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  height: 450px;
+}
+
+.format-section {
+  margin-bottom: 10px;
+}
+
+.format-section button {
+  background-color: #5a64b0;
+  color: red;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 5px;
+}
+
+.format-section .selected {
+  border: 2px solid black;
+  background-color: #7b86d0;
+}
+
+.large-textarea {
+  flex: 1;
+  position: relative;
+  border: 2px solid red;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+#initial-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: red;
+  text-align: center;
+  gap: 10px;
+}
+
+.upload-box.dragover {
+  background-color: #e0e7ff;
+  border: 2px dashed #5a64b0;
+  cursor: pointer;
+}
+
+.large-textarea textarea {
+  display: none;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  font-family: 'Courier New', monospace;
+  border: 1px ;
+  padding: 5px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.summarize-btn {
+  align-self: center;
+  padding: 5px 15px;
+  border: 2px solid red;
+  border-radius: 10px;
+  color: #5a64b0;
+  background: none;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.output-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.word-count {
+  color: red;
+  font-weight: bold;
+}
+
+.output-icon {
+  color: red;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
