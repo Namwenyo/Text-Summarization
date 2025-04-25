@@ -160,3 +160,36 @@ uploadBox.addEventListener("drop", (e) => {
     })
     .catch(() => alert("Failed to upload file."));
 });
+summarizeBtn.addEventListener("click", async () => {
+  const text = textarea.value.trim();
+  if (!text) return alert("Please enter or paste some text first.");
+
+  try {
+    const res = await fetch("/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, format: selectedFormat })
+    });
+
+    const data = await res.json();
+    summaryOutput.innerHTML = formatSummary(data.summary, selectedFormat);
+    wordCount.textContent = `word count: ${data.summary.split(/\s+/).filter(w => w.length > 0).length}`;
+
+    // Enable download button
+    const downloadBtn = document.getElementById("download-btn");
+    downloadBtn.style.display = "block";
+
+    // Set up download functionality
+    downloadBtn.addEventListener("click", () => {
+      const blob = new Blob([data.summary], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "summary.txt"; // You can set any name here
+      link.click();
+    });
+
+  } catch (err) {
+    alert("Something went wrong with summarization.");
+    console.error(err);
+  }
+});
