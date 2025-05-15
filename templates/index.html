@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Text Summarization</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 </head>
 <body>
   <header>
@@ -58,7 +57,6 @@
           Word count: 0
         </div>
         
-
         <button class="summarize-btn" id="summarize-btn">summarize</button>
       </section>
       <button id="theme-toggle">Toggle Dark Mode</button>
@@ -80,173 +78,165 @@
           <div class="output-icon" id="copy-output" style="cursor:pointer;">
             <img src="https://img.icons8.com/ios/24/copy.png" alt="output icon"/>
             output
+          </div>
+        </div>
       </section>
+      <button id="download-btn" style="display:none;">Download Summary</button>
     </div>
-  </div>
-  <button id="download-btn" style="display:none;">Download Summary</button>
-
-</div>
-
   </main>
 
   <script>
-const textarea = document.getElementById("text-input");
-const initialState = document.getElementById("initial-state");
-const fileUpload = document.getElementById("file-upload");
-const uploadLabel = document.getElementById("upload-label");
-const uploadBox = document.getElementById("upload-box");
-const pasteBtn = document.getElementById("paste-btn");
-const inputWordCount = document.getElementById("input-word-count");
-const summarizeBtn = document.getElementById("summarize-btn");
-const formatButtons = document.querySelectorAll(".format-option");
-const summaryOutput = document.getElementById("summary-output");
-const wordCount = document.getElementById("word-count");
-const copyOutput = document.getElementById("copy-output");
+    const textarea = document.getElementById("text-input");
+    const initialState = document.getElementById("initial-state");
+    const fileUpload = document.getElementById("file-upload");
+    const uploadLabel = document.getElementById("upload-label");
+    const uploadBox = document.getElementById("upload-box");
+    const pasteBtn = document.getElementById("paste-btn");
+    const inputWordCount = document.getElementById("input-word-count");
+    const summarizeBtn = document.getElementById("summarize-btn");
+    const formatButtons = document.querySelectorAll(".format-option");
+    const summaryOutput = document.getElementById("summary-output");
+    const wordCount = document.getElementById("word-count");
+    const copyOutput = document.getElementById("copy-output");
 
-let selectedFormat = "paragraph";
+    let selectedFormat = "paragraph";
 
-function showTextOnly() {
-  initialState.style.display = "none";
-  textarea.style.display = "block";
-  textarea.focus();
-}
-
-function updateInputWordCount() {
-  const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
-  inputWordCount.textContent = `Word count: ${words.length}`;
-}
-
-textarea.addEventListener("input", () => {
-  if (textarea.value.trim()) {
-    showTextOnly();
-  } else {
-    initialState.style.display = "flex";
-  }
-  updateInputWordCount();
-});
-
-uploadLabel.addEventListener("click", () => fileUpload.click());
-
-fileUpload.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert(data.error);
-      } else {
-        textarea.value = data.text;
-        showTextOnly();
-        updateInputWordCount();
-      }
-    })
-    .catch(() => alert("Failed to upload file."));
-});
-
-pasteBtn.addEventListener("click", async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    if (text) {
-      textarea.value = text;
-      showTextOnly();
-      updateInputWordCount();
-    } else {
-      alert("Clipboard is empty!");
+    function showTextOnly() {
+      initialState.style.display = "none";
+      textarea.style.display = "block";
+      textarea.focus();
     }
-  } catch (err) {
-    alert("Clipboard access not allowed. Please allow permissions.");
-  }
-});
 
-formatButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    formatButtons.forEach(btn => btn.classList.remove("selected"));
-    button.classList.add("selected");
-    selectedFormat = button.dataset.format;
-  });
-});
+    function updateInputWordCount() {
+      const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0);
+      inputWordCount.textContent = `Word count: ${words.length}`;
+    }
 
-summarizeBtn.addEventListener("click", async () => {
-  const text = textarea.value.trim();
-  if (!text) return alert("Please enter or paste some text first.");
-
-  try {
-    const res = await fetch("/summarize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, format: selectedFormat })
+    textarea.addEventListener("input", () => {
+      if (textarea.value.trim()) {
+        showTextOnly();
+      } else {
+        initialState.style.display = "flex";
+      }
+      updateInputWordCount();
     });
 
-    const data = await res.json();
-    summaryOutput.innerHTML = formatSummary(data.summary, selectedFormat);
-    wordCount.textContent = `word count: ${data.summary.split(/\s+/).filter(w => w.length > 0).length}`;
-  } catch (err) {
-    alert("Something went wrong with summarization.");
-    console.error(err);
-  }
-});
+    uploadLabel.addEventListener("click", () => fileUpload.click());
 
-function formatSummary(summary, format) {
-  const lines = summary.split("\n").filter(line => line.trim());
-  if (format === "bullets") {
-    return lines.map(line => `• ${line}`).join("\n");
-  } else if (format === "numbered") {
-    return lines.map((line, idx) => `${idx + 1}. ${line}`).join("\n");
-  }
-  return summary;
-}
+    fileUpload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-copyOutput.addEventListener("click", () => {
-  navigator.clipboard.writeText(summaryOutput.textContent)
-    .then(() => alert("Copied to clipboard!"))
-    .catch(() => alert("Failed to copy"));
-});
+      const formData = new FormData();
+      formData.append("file", file);
 
-// Drag-and-drop support
-uploadBox.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  uploadBox.classList.add("dragover");
-});
+      fetch("/upload", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+          } else {
+            textarea.value = data.text;
+            showTextOnly();
+            updateInputWordCount();
+          }
+        })
+        .catch(() => alert("Failed to upload file."));
+    });
 
-uploadBox.addEventListener("dragleave", () => {
-  uploadBox.classList.remove("dragover");
-});
-
-uploadBox.addEventListener("drop", (e) => {
-  e.preventDefault();
-  uploadBox.classList.remove("dragover");
-
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert(data.error);
-      } else {
-        textarea.value = data.text;
-        showTextOnly();
-        updateInputWordCount();
+    pasteBtn.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          textarea.value = text;
+          showTextOnly();
+          updateInputWordCount();
+        } else {
+          alert("Clipboard is empty!");
+        }
+      } catch (err) {
+        alert("Clipboard access not allowed. Please allow permissions.");
       }
-    })
-    .catch(() => alert("Failed to upload file."));
-});
+    });
+
+    formatButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        formatButtons.forEach(btn => btn.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedFormat = button.dataset.format;
+      });
+    });
+
+    summarizeBtn.addEventListener("click", async () => {
+      const text = textarea.value.trim();
+      if (!text) return alert("Please enter or paste some text first.");
+
+      try {
+        const res = await fetch("/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, format: selectedFormat })
+        });
+
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        summaryOutput.textContent = data.summary;
+        wordCount.textContent = `Word count: ${data.summary.split(/\s+/).filter(w => w.length > 0).length}`;
+      } catch (err) {
+        alert("Something went wrong with summarization.");
+        console.error(err);
+      }
+    });
+
+    copyOutput.addEventListener("click", () => {
+      navigator.clipboard.writeText(summaryOutput.textContent)
+        .then(() => alert("Copied to clipboard!"))
+        .catch(() => alert("Failed to copy"));
+    });
+
+    // Drag-and-drop support
+    uploadBox.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadBox.classList.add("dragover");
+    });
+
+    uploadBox.addEventListener("dragleave", () => {
+      uploadBox.classList.remove("dragover");
+    });
+
+    uploadBox.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadBox.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      fetch("/upload", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+          } else {
+            textarea.value = data.text;
+            showTextOnly();
+            updateInputWordCount();
+          }
+        })
+        .catch(() => alert("Failed to upload file."));
+    });
   </script>
-  
 </body>
 </html>
